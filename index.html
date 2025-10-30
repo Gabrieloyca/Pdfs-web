@@ -7,36 +7,18 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>Pdfs-web</h1>
-    <div class="controls">
-      <label for="zoom">Zoom</label>
-      <input id="zoom" type="range" min="0.25" max="3" step="0.05" value="1" />
-      <span id="zoomValue">100%</span>
-      <input id="fileInput" type="file" accept="application/pdf" />
-      <select id="pdfSelect"></select>
-      <button id="openBtn">Abrir</button>
-    </div>
-  </header>
-
   <main id="viewerContainer" class="viewer-container" tabindex="0">
-    <div id="dropZone" class="drop-zone">Arrastra un PDF aquí o usa "Abrir archivo"</div>
     <div id="pages" class="pages"></div>
   </main>
 
-  <footer class="footer">
-    <small>Sugerencia: Mantén Ctrl y usa la rueda del ratón para hacer zoom</small>
-  </footer>
-
-  <!-- PDF.js - usando una versión compatible desde CDN -->
-  <script src="https://unpkg.com/pdfjs-dist/build/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
-    // Indicar la workerSrc para pdf.js (normalmente desde el mismo CDN)
     if (window['pdfjsLib']) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist/build/pdf.worker.min.js';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    } else {
+      console.error('pdfjsLib no está disponible tras cargar pdf.js desde CDN.');
     }
   </script>
-
   <script src="js/viewer.js"></script>
 </body>
 </html>
