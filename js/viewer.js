@@ -22,6 +22,33 @@ function getPageKey(docIndex, pageNumber) {
   return `${docIndex}-${pageNumber}`;
 }
 
+function encodeLocalPath(path) {
+  if (!path) return null;
+  let working = path;
+  let hash = '';
+  let query = '';
+
+  const hashIndex = working.indexOf('#');
+  if (hashIndex !== -1) {
+    hash = working.slice(hashIndex);
+    working = working.slice(0, hashIndex);
+  }
+
+  const queryIndex = working.indexOf('?');
+  if (queryIndex !== -1) {
+    query = working.slice(queryIndex);
+    working = working.slice(0, queryIndex);
+  }
+
+  const encodedPath = working
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/')
+    .replace(/%25/g, '%');
+
+  return `${encodedPath}${query}${hash}`;
+}
+
 function resolveFilePath(basePath, file) {
   if (typeof file !== 'string') return null;
   const trimmed = file.trim();
@@ -31,11 +58,11 @@ function resolveFilePath(basePath, file) {
   }
 
   const withoutLeadingDots = trimmed.replace(/^\.\/+/g, '').replace(/^\/+/g, '');
-  if (withoutLeadingDots.startsWith('pdfs/')) {
-    return withoutLeadingDots;
-  }
+  const localPath = withoutLeadingDots.startsWith('pdfs/')
+    ? withoutLeadingDots
+    : `${basePath}/${withoutLeadingDots}`;
 
-  return `${basePath}/${withoutLeadingDots}`;
+  return encodeLocalPath(localPath);
 }
 
 function clearPages() {
@@ -302,7 +329,8 @@ async function fetchDirectoryFiles(basePath) {
       .map((href) => decodeURIComponent(href))
       .map((href) => href.replace(/^.*\//, ''))
       .filter((file) => file.toLowerCase().endsWith('.pdf'))
-      .map((file) => `${basePath}/${file}`);
+      .map((file) => resolveFilePath(basePath, file))
+      .filter(Boolean);
   } catch (error) {
     console.warn(`No se pudo obtener listado de ${basePath}:`, error);
     return [];
@@ -340,8 +368,8 @@ async function collectPdfSources() {
   }
 
   if (!sources.length) {
-    const fallback = 'pdfs/pagina-01/Entrega Arquitectura Palta Aribnb.pdf';
-    if (!seen.has(fallback)) {
+    const fallback = resolveFilePath('pdfs/pagina-01', 'Entrega Arquitectura Palta Aribnb.pdf');
+    if (fallback && !seen.has(fallback)) {
       sources.push(fallback);
     }
   }
@@ -359,7 +387,7 @@ async function loadAllPdfs() {
 
   for (const source of sources) {
     try {
-      const loadingTask = pdfjsLib.getDocument(source);
+      const loadingTask = pdfjsLib.getDocument({ url: source });
       const pdfDoc = await loadingTask.promise;
       const docIndex = pdfDocuments.length;
       pdfDocuments.push({ doc: pdfDoc, source });
